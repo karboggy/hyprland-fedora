@@ -1,106 +1,117 @@
 FROM fedora:43
 
+# Configuration
+ENV INSTALL_PREFIX=/out
+ENV HYPRLAND_VERSION=v0.52.1
+
+# Environment
+ENV PATH="${INSTALL_PREFIX}/bin:${PATH}"
+ENV CMAKE_COMMON_FLAGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
+ENV CMAKE_PREFIX_PATH="${INSTALL_PREFIX}:${INSTALL_PREFIX}/lib64/cmake:${INSTALL_PREFIX}/lib/cmake"
+ENV PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig"
+
+# Install dependencies
 RUN dnf -y update && \
     dnf -y install \
-        pugixml-devel \
+        cairo-devel \
+        cmake \
+        file-devel \
+        file-libs \
+        gcc \
+        gcc-c++ \
+        git \
+        glslang \
+        glslang-devel \
         hwdata-devel \
-        git meson ninja-build \
-        cmake gcc gcc-c++ pkgconf pkgconf-pkg-config \
-        python3 glslang glslang-devel \
-        vulkan-headers vulkan-loader-devel \
-        wayland-devel wayland-protocols-devel \
-        libxkbcommon-devel libinput-devel libseat-devel \
-        pixman-devel cairo-devel pango-devel \
-        libdrm-devel mesa-libgbm-devel mesa-libEGL-devel \
-        xcb-util-wm-devel xcb-util-image-devel xcb-util-keysyms-devel xcb-util-renderutil-devel \
-        libX11-devel libxcb-devel \
-        xorg-x11-server-Xwayland-devel systemd-devel \
+        libX11-devel \
+        libXcursor-devel \
+        libdrm-devel \
         libdisplay-info-devel \
+        libinput-devel \
+        libjpeg-turbo-devel \
+        libpng-devel \
+        librsvg2-devel \
+        libseat-devel \
+        libuuid-devel \
+        libwebp-devel \
+        libxkbcommon-devel \
+        libzip-devel \
+        mesa-libEGL-devel \
+        mesa-libgbm-devel \
+        meson \
+        muParser-devel \
+        ninja-build \
+        pango-devel \
+        pixman-devel \
+        pkgconf \
+        pkgconf-pkg-config \
+        pugixml-devel \
+        python3 \
+        re2-devel \
+        systemd-devel \
+        tomlplusplus-devel \
+        vulkan-headers \
+        vulkan-loader-devel \
+        wayland-devel \
+        wayland-protocols-devel \
+        xcb-util-devel \
+        xcb-util-errors-devel \
+        xcb-util-image-devel \
+        xcb-util-keysyms-devel \
+        xcb-util-renderutil-devel \
+        xcb-util-wm-devel \
+        libxcb-devel \
+        xorg-x11-server-Xwayland-devel \
     && dnf clean all
 
-
-
-# hyprwayland-scanner
+# Build hyprwayland-scanner
 RUN git clone --recursive https://github.com/hyprwm/hyprwayland-scanner.git /src/hyprwayland-scanner
 WORKDIR /src/hyprwayland-scanner
-RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
-RUN cmake --build build --target all -j$(nproc)
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
 RUN cmake --install build
 
-# hyprutils
-RUN git clone https://github.com/hyprwm/hyprutils.git /src/hyprutils && \
-    cd /src/hyprutils && \
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && \
-    cmake --build build -j$(nproc) && \
-    cmake --install build
+# Build hyprutils
+RUN git clone https://github.com/hyprwm/hyprutils.git /src/hyprutils
+WORKDIR /src/hyprutils
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
 
-# ============================
-# Build Aquamarine dependency
-# ============================
-RUN mkdir -p /src && \
-    git clone --recursive https://github.com/hyprwm/aquamarine.git /src/aquamarine
-
+# Build Aquamarine
+RUN git clone --recursive https://github.com/hyprwm/aquamarine.git /src/aquamarine
 WORKDIR /src/aquamarine
 RUN git submodule update --init --recursive
-
-RUN cmake --no-warn-unused-cli \
-          -DCMAKE_BUILD_TYPE:STRING=Release \
-          -DCMAKE_INSTALL_PREFIX:PATH=/usr \
-          -S . -B ./build
-RUN cmake --build ./build --config Release --target all -j$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)
-RUN cmake --install ./build
-
-# hyprlang
-RUN git clone https://github.com/hyprwm/hyprlang.git /src/hyprlang && \
-    cd /src/hyprlang && \
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && \
-    cmake --build build -j$(nproc) && \
-    cmake --install build
-
-RUN dnf -y update && \
-    dnf -y install libzip-devel librsvg2-devel tomlplusplus-devel
-
-# hyprcursor
-RUN git clone https://github.com/hyprwm/hyprcursor.git /src/hyprcursor && \
-    cd /src/hyprcursor && \
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && \
-    cmake --build build -j$(nproc) && \
-    cmake --install build
-
-RUN dnf -y update && \
-    dnf install -y cairo-devel \
-    librsvg2-devel \
-    libpng-devel \
-    libjpeg-turbo-devel \
-    libwebp-devel \
-    file-devel \
-    libuuid-devel \
-    libXcursor-devel \
-    re2-devel \
-    muParser-devel \
-    libX11-devel libxcb-devel xcb-util-devel xcb-util-wm-devel xcb-util-image-devel \
-    xcb-util-keysyms-devel xcb-util-renderutil-devel xcb-util-errors-devel \
-    file-libs 
-
-# hyprgraphics
-RUN git clone https://github.com/hyprwm/hyprgraphics.git /src/hyprgraphics && \
-    cd /src/hyprgraphics && \
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr && \
-    cmake --build build -j$(nproc) && \
-    cmake --install build
-
-# ============================
-# Build Hyprland
-# ============================
-RUN mkdir -p /src && \
-    git clone --recursive https://github.com/hyprwm/Hyprland.git /src/Hyprland
-WORKDIR /src/Hyprland
-RUN git submodule update --init --recursive
-RUN cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-RUN cmake --build build
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
 RUN cmake --install build
 
-ENV XDG_RUNTIME_DIR=/tmp/runtime-root
-RUN mkdir -p $XDG_RUNTIME_DIR && chmod 700 $XDG_RUNTIME_DIR
+# Build hyprlang
+RUN git clone https://github.com/hyprwm/hyprlang.git /src/hyprlang
+WORKDIR /src/hyprlang
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
 
-CMD ["Hyprland", "--version"]
+# Build hyprcursor
+RUN git clone https://github.com/hyprwm/hyprcursor.git /src/hyprcursor
+WORKDIR /src/hyprcursor
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprgraphics
+RUN git clone https://github.com/hyprwm/hyprgraphics.git /src/hyprgraphics
+WORKDIR /src/hyprgraphics
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build Hyprland
+RUN git clone --recursive https://github.com/hyprwm/Hyprland.git /src/Hyprland
+WORKDIR /src/Hyprland
+RUN git fetch --tags && git checkout ${HYPRLAND_VERSION}
+RUN git submodule update --init --recursive
+RUN cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DNO_TESTS=TRUE -DBUILD_TESTING=FALSE
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
