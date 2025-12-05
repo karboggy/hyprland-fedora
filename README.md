@@ -5,6 +5,16 @@ Hyprland automatically built by GitHub Actions for Fedora
 - Fedora 43
     - Hyprland v0.52.1
 
+# How to use
+```shell
+# create the docker image (will clone and build all projects)
+./build.sh
+
+# bring back binaries on the host
+./copy.sh
+
+```
+
 # Tips
 ```shell
 # List all packages from a copr repo (e.g: solopasha:hyprland)
