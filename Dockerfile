@@ -25,6 +25,7 @@ RUN dnf -y update && \
         glslang \
         glslang-devel \
         hwdata-devel \
+        iniparser-devel \
         jemalloc-devel \
         libX11-devel \
         libXcursor-devel \
@@ -33,6 +34,7 @@ RUN dnf -y update && \
         libinput-devel \
         libjpeg-turbo-devel \
         libpng-devel \
+        libqalculate-devel \
         librsvg2-devel \
         libseat-devel \
         libuuid-devel \
@@ -54,6 +56,7 @@ RUN dnf -y update && \
         pkgconf \
         pkgconf-pkg-config \
         polkit-devel \
+        polkit-qt6-1-devel \
         pugixml-devel \
         python3 \
         qt6-qtbase-devel \
@@ -61,9 +64,11 @@ RUN dnf -y update && \
         qt6-qtdeclarative-devel \
         qt6-qtdeclarative-private-devel \
         qt6-qtsvg-devel \
-        qt6-qtwayland-devel \
         qt6-qtshadertools-devel \
+        qt6-qtwayland-devel \
         re2-devel \
+        sdbus-cpp \
+        sdbus-cpp-devel \
         spirv-tools \
         spirv-tools-devel \
         systemd-devel \
@@ -138,5 +143,90 @@ RUN cmake --install build
 RUN git clone --recursive https://github.com/quickshell-mirror/quickshell.git /src/quickshell
 WORKDIR /src/quickshell
 RUN cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DDISTRIBUTOR=karboggy -DCRASH_REPORTER=OFF
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprland-protocols
+RUN git clone https://github.com/hyprwm/hyprland-protocols.git /src/hyprland-protocols
+WORKDIR /src/hyprland-protocols
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprwire
+RUN git clone https://github.com/hyprwm/hyprwire.git /src/hyprwire
+WORKDIR /src/hyprwire
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprtoolkit
+RUN git clone https://github.com/hyprwm/hyprtoolkit.git /src/hyprtoolkit
+WORKDIR /src/hyprtoolkit
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+
+# Build hypridle
+RUN git clone https://github.com/hyprwm/hypridle.git /src/hypridle
+WORKDIR /src/hypridle
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprlock
+RUN git clone https://github.com/hyprwm/hyprlock.git /src/hyprlock
+WORKDIR /src/hyprlock
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprpaper
+RUN git clone https://github.com/hyprwm/hyprpaper.git /src/hyprpaper
+WORKDIR /src/hyprpaper
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprpicker
+RUN git clone https://github.com/hyprwm/hyprpicker.git /src/hyprpicker
+WORKDIR /src/hyprpicker
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprsunset
+RUN git clone https://github.com/hyprwm/hyprsunset.git /src/hyprsunset
+WORKDIR /src/hyprsunset
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprpolkitagent
+RUN git clone https://github.com/hyprwm/hyprpolkitagent.git /src/hyprpolkitagent
+WORKDIR /src/hyprpolkitagent
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprsysteminfo
+RUN git clone https://github.com/hyprwm/hyprsysteminfo.git /src/hyprsysteminfo
+WORKDIR /src/hyprsysteminfo
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build hyprlauncher
+RUN git clone https://github.com/hyprwm/hyprlauncher.git /src/hyprlauncher
+WORKDIR /src/hyprlauncher
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+RUN cmake --build build -j$(nproc)
+RUN cmake --install build
+
+# Build xdg-desktop-portal-hyprland
+RUN git clone https://github.com/hyprwm/xdg-desktop-portal-hyprland.git /src/xdg-desktop-portal-hyprland
+WORKDIR /src/xdg-desktop-portal-hyprland
+RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
 RUN cmake --build build -j$(nproc)
 RUN cmake --install build
