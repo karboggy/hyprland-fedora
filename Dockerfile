@@ -250,3 +250,80 @@ RUN cmake -B build -S . ${CMAKE_COMMON_FLAGS}
 RUN cmake --build build -j$(nproc)
 RUN cmake --install build
 RUN DESTDIR=/out/packages/xdg-desktop-portal-hyprland cmake --install build
+
+# RPM tools
+RUN dnf -y install rpm-build \
+    rpmdevtools \
+    tar \
+    gzip
+
+# Setup RPM (/root/rpmbuild/{SOURCES,SPECS,RPMS,SRPMS})
+RUN <<'EOF'
+set -eux
+
+rpmdev-setuptree
+
+for pkgdir in /out/packages/*; do
+    name="$(basename "$pkgdir")"
+    srcdir="/src/$name"
+
+    if [ -d "$srcdir/.git" ]; then
+        version="$(cd "$srcdir" && git describe --tags --long \
+            | sed -E 's/^v//; s/-([0-9]+)-g/^\1.git/')"
+        url="$(cd "$srcdir" && git remote get-url origin)"
+    else
+        version="0.0.0"
+        url="UNKNOWN"
+    fi
+
+    echo "Packaging $name-$version"
+
+    buildsrc="/tmp/${name}-${version}"
+    rm -rf "$buildsrc"
+    mkdir -p "$buildsrc"
+    cp -a "$pkgdir/usr" "$buildsrc/"
+
+    tar -C /tmp -czf \
+        "/root/rpmbuild/SOURCES/${name}-${version}.tar.gz" \
+        "${name}-${version}"
+
+    cat > "/root/rpmbuild/SPECS/${name}.spec" <<SPEC
+%global debug_package %{nil}
+
+Name:           ${name}
+Version:        ${version}
+Release:        1%{?dist}
+Summary:        ${name} auto-built by karboggy
+
+License:        UNKNOWN
+URL:            ${url}
+BuildArch:      x86_64
+
+Source0:        %{name}-%{version}.tar.gz
+
+%description
+${name} package auto-built from sources on GitHub. (https://github.com/karboggy/hyprland-fedora)
+
+%prep
+%autosetup -n %{name}-%{version}
+
+%build
+# nothing
+
+%install
+mkdir -p %{buildroot}
+cp -a usr %{buildroot}/
+
+%files
+/usr
+
+%changelog
+* $(date +"%a %b %d %Y") Builder <builder@local> - %{version}-1
+- Automated build
+SPEC
+
+    rpmbuild -bb "/root/rpmbuild/SPECS/${name}.spec"
+done
+EOF
+
+# RUN mkdir -p /out/rpms && cp -rv /root/rpmbuild/RPMS/* /out/rpms
