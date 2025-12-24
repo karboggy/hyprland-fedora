@@ -1,1 +1,0 @@
-docker build -t hyprland-fedora43:latest .

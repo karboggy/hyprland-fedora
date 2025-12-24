@@ -7,12 +7,12 @@ Hyprland automatically built by GitHub Actions for Fedora
 
 # How to use
 ```shell
-# create the docker image (will clone and build all projects)
-./build.sh
-
-# bring back binaries on the host
-./copy.sh
-
+# 1. create the docker image
+#  - clone projects
+#  - make binaries from sources
+#  - craft .rpm files
+# 2. bring back binaries on the host
+./process.sh
 ```
 
 # Tips
