@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-HYPRLAND_VERSION=v0.52.1
-
-# Environment
-INSTALL_PREFIX=/usr
-PATH="${INSTALL_PREFIX}/bin:${PATH}"
-CMAKE_COMMON_FLAGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
-CMAKE_PREFIX_PATH="${INSTALL_PREFIX}:${INSTALL_PREFIX}/lib64/cmake:${INSTALL_PREFIX}/lib/cmake"
-PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig"
+# HYPRLAND_VERSION=v0.52.1
 
 # Build hyprwayland-scanner
 git clone --recursive https://github.com/hyprwm/hyprwayland-scanner.git /src/hyprwayland-scanner
@@ -59,24 +52,6 @@ cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprgraphics cmake --install build
 
-# Build Hyprland
-git clone --recursive https://github.com/hyprwm/Hyprland.git /src/hyprland
-cd /src/hyprland
-git fetch --tags && git checkout ${HYPRLAND_VERSION}
-git submodule update --init --recursive
-cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DNO_TESTS=TRUE -DBUILD_TESTING=FALSE
-cmake --build build -j$(nproc)
-cmake --install build
-DESTDIR=/out/packages/hyprland cmake --install build
-
-# Build QuickShell
-git clone --recursive https://github.com/quickshell-mirror/quickshell.git /src/quickshell
-cd /src/quickshell
-cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DDISTRIBUTOR=karboggy -DCRASH_REPORTER=OFF
-cmake --build build -j$(nproc)
-cmake --install build
-DESTDIR=/out/packages/quickshell cmake --install build
-
 # Build hyprland-protocols
 git clone https://github.com/hyprwm/hyprland-protocols.git /src/hyprland-protocols
 cd /src/hyprland-protocols
@@ -100,6 +75,24 @@ cmake -B build -S . ${CMAKE_COMMON_FLAGS}
 cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprtoolkit cmake --install build
+
+# Build Hyprland
+git clone --recursive https://github.com/hyprwm/Hyprland.git /src/hyprland
+cd /src/hyprland
+# git fetch --tags && git checkout ${HYPRLAND_VERSION}
+git submodule update --init --recursive
+cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DNO_TESTS=TRUE -DBUILD_TESTING=FALSE
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/hyprland cmake --install build
+
+# Build QuickShell
+git clone --recursive https://github.com/quickshell-mirror/quickshell.git /src/quickshell
+cd /src/quickshell
+cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DDISTRIBUTOR=karboggy -DCRASH_REPORTER=OFF
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/quickshell cmake --install build
 
 # Build hypridle
 git clone https://github.com/hyprwm/hypridle.git /src/hypridle
@@ -172,3 +165,15 @@ cmake -B build -S . ${CMAKE_COMMON_FLAGS}
 cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/xdg-desktop-portal-hyprland cmake --install build
+
+# Build hyprland-guiutils
+git clone https://github.com/hyprwm/hyprland-guiutils.git /src/hyprland-guiutils
+cd /src/hyprland-guiutils
+cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/hyprland-guiutils cmake --install build
+
+# hyprland-qtutils
+# hyprland-qt-support
+# hyprqt6engine

@@ -1,5 +1,12 @@
 FROM fedora:43
 
+# Environment
+ENV INSTALL_PREFIX=/usr
+ENV PATH="${INSTALL_PREFIX}/bin:${PATH}"
+ENV CMAKE_COMMON_FLAGS="-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
+ENV CMAKE_PREFIX_PATH="${INSTALL_PREFIX}:${INSTALL_PREFIX}/lib64/cmake:${INSTALL_PREFIX}/lib/cmake"
+ENV PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig"
+
 # Install dependencies
 RUN dnf -y update && \
     dnf -y install \
