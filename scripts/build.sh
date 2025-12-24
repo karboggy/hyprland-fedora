@@ -174,6 +174,18 @@ cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprland-guiutils cmake --install build
 
-# hyprland-qtutils
-# hyprland-qt-support
-# hyprqt6engine
+# Build hyprland-qt-support
+git clone https://github.com/hyprwm/hyprland-qt-support.git /src/hyprland-qt-support
+cd /src/hyprland-qt-support
+cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/hyprland-qt-support cmake --install build
+
+# Build hyprqt6engine
+git clone https://github.com/hyprwm/hyprqt6engine.git /src/hyprqt6engine
+cd /src/hyprqt6engine
+cmake -B build -S . ${CMAKE_COMMON_FLAGS}
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/hyprqt6engine cmake --install build
