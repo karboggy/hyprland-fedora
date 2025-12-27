@@ -197,3 +197,9 @@ meson setup build -Duuctl=enabled -Dfumon=enabled -Duwsm-app=enabled
 meson compile -C build -j$(nproc)
 meson install -C build
 DESTDIR=/out/packages/uwsm meson install -C build
+
+# Hyprshot
+git clone https://github.com/Gustash/Hyprshot.git /src/hyprshot
+cd /src/hyprshot
+mkdir -p /out/packages/hyprshot/usr/bin
+install -Dpm0755 hyprshot -t /out/packages/hyprshot/usr/bin
