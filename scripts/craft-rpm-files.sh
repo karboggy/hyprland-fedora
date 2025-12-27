@@ -24,6 +24,9 @@ for pkgdir in /out/packages/*; do
     mkdir -p "$buildsrc"
     cp -a "$pkgdir/usr" "$buildsrc/"
 
+    # Find all files under usr to list in %files
+    filelist=$(find "$buildsrc/usr" \( -type f -o -type l \) | sed "s|$buildsrc||")
+
     tar -C /tmp -czf \
         "/root/rpmbuild/SOURCES/${name}-${version}.tar.gz" \
         "${name}-${version}"
@@ -56,7 +59,14 @@ mkdir -p %{buildroot}
 cp -a usr %{buildroot}/
 
 %files
-/usr
+$(for f in $filelist; do
+    # rpmbuild will compress man pages from /usr/share/man/man1
+    if [[ $f =~ ^/usr/share/man/man1/.*\.1$ ]]; then
+        echo "${f}.gz"
+    else
+        echo "$f"
+    fi
+done)
 
 %changelog
 * $(date +"%a %b %d %Y") Builder <builder@local> - %{version}-1

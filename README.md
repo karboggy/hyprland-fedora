@@ -27,8 +27,7 @@ dnf list --installed | grep solopasha:hyprland
 dnf remove $(dnf list --installed | grep solopasha:hyprland | awk '{print $1}' | cut -d. -f1)
 
 # Install built RPMS :
-cd ./out/packages/rpms/x86_64
-sudo dnf install aquamarine*.rpm hyprcursor*.rpm hyprgraphics*.rpm hypridle*.rpm hyprland*.rpm hyprlang*.rpm hyprlock*.rpm hyprshot*.rpm hyprutils*.rpm uwsm*.rpm xdg-desktop-portal-hyprland*.rpm
+sudo dnf install out/rpms/x86_64/*.rpm
 ```
 
 # Sources
