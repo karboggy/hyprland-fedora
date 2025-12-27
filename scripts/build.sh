@@ -189,3 +189,11 @@ cmake -B build -S . ${CMAKE_COMMON_FLAGS}
 cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprqt6engine cmake --install build
+
+# Build uwsm
+git clone https://github.com/Vladimir-csp/uwsm.git /src/uwsm
+cd /src/uwsm
+meson setup build -Duuctl=enabled -Dfumon=enabled -Duwsm-app=enabled
+meson compile -C build -j$(nproc)
+meson install -C build
+DESTDIR=/out/packages/uwsm meson install -C build

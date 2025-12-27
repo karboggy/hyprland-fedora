@@ -86,6 +86,12 @@ RUN dnf -y update && \
         rpmdevtools \
         tar \
         gzip \
+        python3-dbus \
+        dbus-devel \
+        python3-pyxdg \
+        util-linux \
+        desktop-file-utils \
+        scdoc \
     && dnf clean all
 
 COPY scripts/ /root/

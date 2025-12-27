@@ -19,6 +19,9 @@ Hyprland automatically built by GitHub Actions for Fedora
 ```shell
 # List all packages from a copr repo (e.g: solopasha:hyprland)
 dnf list --available --repo=copr\* | grep "copr:copr.fedorainfracloud.org:solopasha:hyprland"
+
+# List all installed from a copr repo
+dnf list --installed | grep solopasha:hyprland 
 ```
 
 # Sources
