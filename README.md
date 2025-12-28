@@ -7,11 +7,11 @@ Hyprland automatically built by GitHub Actions for Fedora
 
 # How to use
 ```shell
-# 1. create the docker image
+# 1. create the docker image with all required packages 
+# 2. bring back binaries on the host
 #  - clone projects
 #  - make binaries from sources
 #  - craft .rpm files
-# 2. bring back binaries on the host
 ./process.sh
 ```
 

@@ -97,5 +97,4 @@ RUN dnf -y update && \
 COPY scripts/ /root/
 RUN find /root -name "*.sh" -exec chmod +x {} +
 
-RUN /root/build.sh
-RUN /root/craft-rpm-files.sh
+ENTRYPOINT ["/root/entrypoint.sh"]
