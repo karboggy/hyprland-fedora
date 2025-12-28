@@ -1,0 +1,92 @@
+name: Build Fedora Hyprland RPMs
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild Docker image'
+        required: false
+        default: 'false'
+  schedule:
+    - cron: '0 23 * * 0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      DOCKER_IMAGE: hyprland-fedora43
+      OUT_DIR: out
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            FORCE_REBUILD=${{ github.event.inputs.force_rebuild }}
+          load: true
+
+      - name: Create output directory
+        run: mkdir -p ${{ env.OUT_DIR }}
+
+      - name: Run build container
+        run: |
+          docker run --rm \
+            -e HOST_UID=$(id -u) \
+            -e HOST_GID=$(id -g) \
+            -v ${{ github.workspace }}/$OUT_DIR:/out \
+            ${{ env.DOCKER_IMAGE }}:latest
+
+      - name: Collect RPM files
+        id: collect_rpms
+        run: |
+          RPM_FILES=$(find out -type f -name "*.rpm" | sort)
+
+          RELEASE_DESC=""
+          for f in $RPM_FILES; do
+            RELEASE_DESC+="- $(basename "$f")"$'\n'
+          done
+
+          echo "RELEASE_DESC<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_DESC" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create ZIP of RPMs
+        run: |
+          zip -j ${{ env.OUT_DIR }}/hyprland-rpms.zip ${{ steps.collect_rpms.outputs.RPM_FILES }}
+
+      - name: Determine Hyprland version
+        id: version
+        run: |
+          HYPR_RPM=$(ls out/rpms/x86_64/*hyprland*.rpm | head -n1)
+          VERSION=$(basename "$HYPR_RPM" .rpm | sed 's/\^/-/g')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get build date
+        id: date
+        run: |
+          echo "DATE=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
+          name: ${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
+          body: |
+                Automatically built by GitHub Actions for Fedora:
+                ${{ steps.collect_rpms.outputs.RELEASE_DESC }}
+          artifacts: ${{ env.OUT_DIR }}/hyprland-rpms.zip
