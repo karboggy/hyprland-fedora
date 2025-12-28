@@ -203,3 +203,6 @@ git clone https://github.com/Gustash/Hyprshot.git /src/hyprshot
 cd /src/hyprshot
 mkdir -p /out/packages/hyprshot/usr/bin
 install -Dpm0755 hyprshot -t /out/packages/hyprshot/usr/bin
+
+# Change permission to host user
+chown -R "$HOST_UID":"$HOST_GID" /out/packages

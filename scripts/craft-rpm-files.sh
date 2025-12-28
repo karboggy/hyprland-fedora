@@ -77,3 +77,6 @@ SPEC
 done
 
 mkdir -p /out/rpms && cp -rv /root/rpmbuild/RPMS/* /out/rpms
+
+# Change permission to host user
+chown -R "$HOST_UID":"$HOST_GID" /out/rpms
