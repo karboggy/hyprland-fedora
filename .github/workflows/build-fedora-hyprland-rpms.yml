@@ -6,9 +6,9 @@ on:
       force_rebuild:
         description: 'Force rebuild Docker image'
         required: false
-        default: 'false'
+        default: '0'
   schedule:
-    - cron: '0 23 * * 0'
+    - cron: '0 20 * * 0'
 
 jobs:
   build:
@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -65,9 +65,15 @@ jobs:
           echo "$RELEASE_DESC" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Get build date
+        id: date
+        run: |
+          echo "DATE=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
       - name: Create ZIP of RPMs
         run: |
-          zip -j ${{ env.OUT_DIR }}/hyprland-rpms.zip ${{ steps.collect_rpms.outputs.RPM_FILES }}
+          ZIP_NAME="${{ steps.date.outputs.DATE }}_hyprland-fedora-rpms.zip"
+          zip -j "out/$ZIP_NAME" $(find out -type f -name "*.rpm")
 
       - name: Determine Hyprland version
         id: version
@@ -75,11 +81,6 @@ jobs:
           HYPR_RPM=$(ls out/rpms/x86_64/*hyprland*.rpm | head -n1)
           VERSION=$(basename "$HYPR_RPM" .rpm | sed 's/\^/-/g')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Get build date
-        id: date
-        run: |
-          echo "DATE=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
 
       - name: Create GitHub release
         uses: ncipollo/release-action@v1
@@ -89,4 +90,5 @@ jobs:
           body: |
                 Automatically built by GitHub Actions for Fedora:
                 ${{ steps.collect_rpms.outputs.RELEASE_DESC }}
-          artifacts: ${{ env.OUT_DIR }}/hyprland-rpms.zip
+          artifacts: out/${{ steps.date.outputs.DATE }}_hyprland-fedora-rpms.zip
+

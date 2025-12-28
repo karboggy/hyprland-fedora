@@ -1,5 +1,8 @@
 FROM fedora:43
 
+ARG FORCE_REBUILD=0
+RUN echo "Force rebuild cache: $FORCE_REBUILD"
+
 # Environment
 ENV INSTALL_PREFIX=/usr
 ENV PATH="${INSTALL_PREFIX}/bin:${PATH}"
