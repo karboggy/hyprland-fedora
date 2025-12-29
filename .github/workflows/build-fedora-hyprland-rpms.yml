@@ -8,7 +8,7 @@ on:
         required: false
         default: '0'
   schedule:
-    - cron: '0 20 * * 0'
+    - cron: '0 20 * * *'
 
 jobs:
   build:
@@ -85,10 +85,14 @@ jobs:
       - name: Create GitHub release
         uses: ncipollo/release-action@v1
         with:
+          makeLatest: true
+          skipIfReleaseExists: true
           tag: ${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
           name: ${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
           body: |
                 Automatically built by GitHub Actions for Fedora:
                 ${{ steps.collect_rpms.outputs.RELEASE_DESC }}
+
+                [View latest Hyprland commits](https://github.com/hyprwm/Hyprland/commits/main/)
           artifacts: out/${{ steps.date.outputs.DATE }}_hyprland-fedora-rpms.zip
 
