@@ -95,7 +95,7 @@ RUN dnf -y update && \
         util-linux \
         desktop-file-utils \
         scdoc \
-        pciutils-libs \
+        pciutils-devel \
     && dnf clean all
 
 COPY scripts/ /root/
