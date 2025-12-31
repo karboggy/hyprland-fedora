@@ -1,4 +1,4 @@
-# Hyprland - Fedora
+# Hyprland - Fedora (Nightly builds)
 This experimental repository use [GitHub Actions CI](https://github.com/karboggy/hyprland-fedora/actions) to automatically build nightly version of [Hyprland](https://github.com/hyprwm/Hyprland.git), [quickshell](https://git.outfoxxed.me/quickshell/quickshell) & cie packages for Fedora (.rpm). Only for advanced users that want to live on the 'main' branch!
 
 For regular Fedora users, I recommend to use COPR, for example:
@@ -14,6 +14,8 @@ unzip -d hyprland-fedora-rpms 2025-12-29_hyprland-fedora-rpms.zip
 # Install/Update RPM packages
 sudo dnf install hyprland-fedora-rpms/*.rpm
 ```
+
+... or just run the `update.sh` from this repository!
 
 # How to build myself the RPM packages?
 Requirements: `docker`
