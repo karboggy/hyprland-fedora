@@ -41,6 +41,9 @@ dnf list --installed | grep solopasha:hyprland
 # Remove all installed package from a copr repo
 dnf remove $(dnf list --installed | grep solopasha:hyprland | awk '{print $1}' | cut -d. -f1)
 
+# Remove a copr repo
+sudo dnf copr remove solopasha/hyprland
+
 # How to find which fedora packges provides a file (e.g libpci.so)
 dnf provides "*/libpci*"
 ```
