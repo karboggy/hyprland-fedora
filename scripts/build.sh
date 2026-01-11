@@ -3,6 +3,19 @@ set -euxo pipefail
 
 # HYPRLAND_VERSION=v0.52.1
 
+# Build glaze
+git clone https://github.com/stephenberry/glaze.git /src/glaze
+cd /src/glaze
+cmake -B build -S . \
+    ${CMAKE_COMMON_FLAGS} \
+    -Dglaze_INSTALL_CMAKEDIR=/usr/share/cmake/glaze \
+    -Dglaze_DISABLE_SIMD_WHEN_SUPPORTED=ON \
+    -Dglaze_DEVELOPER_MODE=OFF \
+    -Dglaze_ENABLE_FUZZING=OFF
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/glaze cmake --install build
+
 # Build hyprwayland-scanner
 git clone --recursive https://github.com/hyprwm/hyprwayland-scanner.git /src/hyprwayland-scanner
 cd /src/hyprwayland-scanner
