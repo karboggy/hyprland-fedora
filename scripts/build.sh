@@ -98,6 +98,8 @@ cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DNO_TESTS=TRUE -DBUILD_TESTING=FA
 cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprland cmake --install build
+rm -rf /out/packages/hyprland/usr/share/glaze
+rm -rf /out/packages/hyprland/usr/include/glaze
 
 # Build QuickShell
 git clone --recursive https://github.com/quickshell-mirror/quickshell.git /src/quickshell
