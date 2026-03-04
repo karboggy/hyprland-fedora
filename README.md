@@ -15,7 +15,7 @@ unzip -d hyprland-fedora-rpms 2025-12-29_hyprland-fedora-rpms.zip
 sudo dnf install hyprland-fedora-rpms/*.rpm
 ```
 
-... or just run the `update.sh` from this repository!
+... or just run the `update-latest.sh` from this repository!
 
 # How to build myself the RPM packages?
 Requirements: `docker`
@@ -24,7 +24,7 @@ Requirements: `docker`
 git clone https://github.com/karboggy/hyprland-fedora.git
 
 # Generate the RPM packages
-cd hyprland-fedora && ./process.sh
+cd hyprland-fedora && ./build-locally.sh
 
 # Install/Update RPM packages
 sudo dnf install out/rpms/x86_64/*.rpm
