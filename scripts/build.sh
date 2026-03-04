@@ -104,7 +104,7 @@ rm -rf /out/packages/hyprland/usr/include/glaze
 # Build QuickShell
 git clone --recursive https://github.com/quickshell-mirror/quickshell.git /src/quickshell
 cd /src/quickshell
-cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DDISTRIBUTOR=karboggy -DVENDOR_CPPTRACE=OFF
+cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DDISTRIBUTOR=karboggy -DCRASH_HANDLER=OFF
 cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/quickshell cmake --install build
