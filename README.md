@@ -75,3 +75,11 @@ dnf provides "*/libpci*"
  - uwsm
  - xdg-desktop-portal-hyprland
 
+# Roadmap
+ - [x] misc: Script to locally build packages
+ - [x] ci: Github CI pipeline to build nightly
+ - [x] misc: Script to update from latest build done by Github
+ - [ ] quickshell: enable cpptrace feature (-DVENDOR_CPPTRACE=ON)
+ - [ ] ci: Add Github CI pipeline to build latest release of each project
+ - [ ] ci: Allow dnf install from this Githuv repository (or COPR ?)
+
