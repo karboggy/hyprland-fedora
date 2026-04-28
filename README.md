@@ -1,21 +1,26 @@
-# Hyprland - Fedora (Nightly builds)
-This experimental repository use [GitHub Actions CI](https://github.com/karboggy/hyprland-fedora/actions) to automatically build nightly version of [Hyprland](https://github.com/hyprwm/Hyprland.git), [quickshell](https://git.outfoxxed.me/quickshell/quickshell) & cie packages for Fedora (.rpm). Only for advanced users that want to live on the 'main' branch!
+# Hyprland - Fedora (stable & nightly builds)
+This experimental repository use [GitHub Actions CI](https://github.com/karboggy/hyprland-fedora/actions) to automatically build stable and nightly version of [Hyprland](https://github.com/hyprwm/Hyprland.git), [quickshell](https://git.outfoxxed.me/quickshell/quickshell) & cie packages for Fedora (.rpm). Only for advanced users!
 
 For regular Fedora users, I recommend to use COPR, for example:
 - https://github.com/solopasha/hyprlandRPM
 - https://github.com/LionHeartP/hyprlandRPM
 
-# How to install the generated RPM packages?
+
+# How to install the latest stable?
+Run `./update-latest.sh stable` 
+
+# How to install the latest nightly?
+Run `./update-latest.sh nightly` 
+
+# How to install a specific gereated package?
 Download the zip file from [the latest generated RPM packages](https://github.com/karboggy/hyprland-fedora/releases/latest) (Asset section).
 ```shell
 # Unzip it
-unzip -d hyprland-fedora-rpms 2025-12-29_hyprland-fedora-rpms.zip
+unzip -d hyprland-fedora-rpms 2025-12-29_hyprland-fedora-nightly-rpms.zip
 
 # Install/Update RPM packages
 sudo dnf install hyprland-fedora-rpms/*.rpm
 ```
-
-... or just run the `update-latest.sh` from this repository!
 
 # How to build myself the RPM packages?
 Requirements: `docker`
@@ -23,8 +28,11 @@ Requirements: `docker`
 # Clone this repository
 git clone https://github.com/karboggy/hyprland-fedora.git
 
-# Generate the RPM packages
-cd hyprland-fedora && ./build-locally.sh
+# Generate nightly RPM packages
+cd hyprland-fedora && ./build-locally.sh nightly
+
+# Generate stable RPM packages from versions/stable.env
+./build-locally.sh stable
 
 # Install/Update RPM packages
 sudo dnf install out/rpms/x86_64/*.rpm
@@ -80,6 +88,5 @@ dnf provides "*/libpci*"
  - [x] ci: Github CI pipeline to build nightly
  - [x] misc: Script to update from latest build done by Github
  - [ ] quickshell: enable cpptrace feature (-DVENDOR_CPPTRACE=ON)
- - [ ] ci: Add Github CI pipeline to build latest release of each project
+ - [x] ci: Add Github CI pipeline to build latest release of each project (kind of)
  - [ ] ci: Allow dnf install from this Githuv repository (or COPR ?)
-

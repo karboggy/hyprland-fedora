@@ -1,0 +1,23 @@
+name: Nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild Docker image'
+        required: false
+        default: '0'
+  schedule:
+    - cron: '0 20 * * *'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generic-workflow.yml
+    with:
+      force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
+      docker_image: hyprland-fedora43
+      artifact_suffix: hyprland-fedora-nightly-rpms
+      make_latest: true
+      release_intro: 'Automatically built by GitHub Actions for Fedora:'

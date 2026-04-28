@@ -100,6 +100,7 @@ RUN dnf -y update && \
     && dnf clean all
 
 COPY scripts/ /root/
+COPY versions/ /root/versions/
 RUN chmod +x /root/*.sh
 
 ENTRYPOINT ["/root/entrypoint.sh"]

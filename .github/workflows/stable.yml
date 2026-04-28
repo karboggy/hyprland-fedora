@@ -1,0 +1,25 @@
+name: Stable
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild Docker image'
+        required: false
+        default: '0'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/generic-workflow.yml
+    with:
+      force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
+      docker_image: hyprland-fedora43-stable
+      artifact_suffix: hyprland-fedora-stable-rpms
+      version_manifest: /root/versions/stable.env
+      manifest_summary_path: versions/stable.env
+      release_tag_prefix: stable_
+      make_latest: false
+      release_intro: 'Stable RPM build for Fedora using pinned refs from versions/stable.env:'
+      include_manifest_summary: true

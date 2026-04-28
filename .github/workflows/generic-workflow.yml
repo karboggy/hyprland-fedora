@@ -1,0 +1,146 @@
+name: (generic workflow)
+
+on:
+  workflow_call:
+    inputs:
+      force_rebuild:
+        type: string
+        required: false
+        default: '0'
+      docker_image:
+        type: string
+        required: true
+      artifact_suffix:
+        type: string
+        required: true
+      version_manifest:
+        type: string
+        required: false
+        default: ''
+      manifest_summary_path:
+        type: string
+        required: false
+        default: ''
+      release_tag_prefix:
+        type: string
+        required: false
+        default: ''
+      make_latest:
+        type: boolean
+        required: false
+        default: false
+      release_intro:
+        type: string
+        required: true
+      include_manifest_summary:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      OUT_DIR: out
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ inputs.docker_image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            FORCE_REBUILD=${{ inputs.force_rebuild }}
+          load: true
+
+      - name: Create output directory
+        run: mkdir -p ${{ env.OUT_DIR }}
+
+      - name: Clone, compile and craft RPM packages
+        run: |
+          docker_args=(
+            --rm
+            -e HOST_UID=$(id -u)
+            -e HOST_GID=$(id -g)
+          )
+
+          if [[ -n "${{ inputs.version_manifest }}" ]]; then
+            docker_args+=(-e VERSION_MANIFEST=${{ inputs.version_manifest }})
+          fi
+
+          docker run "${docker_args[@]}" \
+            -v ${{ github.workspace }}/${{ env.OUT_DIR }}:/out \
+            ${{ inputs.docker_image }}:latest
+
+      - name: Collect RPM files
+        id: collect_rpms
+        run: |
+          RPM_FILES=$(find out -type f -name "*.rpm" | sort)
+
+          RELEASE_DESC=""
+          for f in $RPM_FILES; do
+            RELEASE_DESC+="- $(basename "$f")"$'\n'
+          done
+
+          echo "RELEASE_DESC<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_DESC" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Get build date
+        id: date
+        run: |
+          echo "DATE=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Create ZIP of RPMs
+        run: |
+          ZIP_NAME="${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}.zip"
+          zip -j "out/$ZIP_NAME" $(find out -type f -name "*.rpm")
+
+      - name: Determine Hyprland version
+        id: version
+        run: |
+          HYPR_RPM=$(ls out/rpms/x86_64/*hyprland*.rpm | head -n1)
+          VERSION=$(basename "$HYPR_RPM" .rpm | sed 's/\^/-/g')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build release body
+        run: |
+          echo "${{ inputs.release_intro }}" > out/release-body.md
+          echo >> out/release-body.md
+
+          if [[ "${{ inputs.include_manifest_summary }}" == "true" ]]; then
+            sed -n '/^REF_/p' "${{ inputs.manifest_summary_path }}" >> out/release-body.md
+            echo >> out/release-body.md
+            echo "Generated RPMs:" >> out/release-body.md
+          fi
+
+          echo "${{ steps.collect_rpms.outputs.RELEASE_DESC }}" >> out/release-body.md
+
+          if [[ "${{ inputs.include_manifest_summary }}" != "true" ]]; then
+            echo >> out/release-body.md
+            echo "[View latest Hyprland commits](https://github.com/hyprwm/Hyprland/commits/main/)" >> out/release-body.md
+          fi
+
+      - name: Create GitHub release
+        if: github.ref == 'refs/heads/main'
+        uses: ncipollo/release-action@v1
+        with:
+          makeLatest: ${{ inputs.make_latest }}
+          skipIfReleaseExists: true
+          tag: ${{ inputs.release_tag_prefix }}${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
+          name: ${{ inputs.release_tag_prefix }}${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
+          bodyFile: out/release-body.md
+          artifacts: out/${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}.zip
