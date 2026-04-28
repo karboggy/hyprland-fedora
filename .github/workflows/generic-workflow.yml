@@ -21,7 +21,7 @@ on:
         type: string
         required: false
         default: ''
-      release_tag_prefix:
+      release_tag_suffix:
         type: string
         required: false
         default: ''
@@ -140,7 +140,7 @@ jobs:
         with:
           makeLatest: ${{ inputs.make_latest }}
           skipIfReleaseExists: true
-          tag: ${{ inputs.release_tag_prefix }}${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
-          name: ${{ inputs.release_tag_prefix }}${{ steps.date.outputs.DATE }}_${{ steps.version.outputs.VERSION }}
+          tag: ${{ steps.date.outputs.DATE }}${{ inputs.release_tag_suffix }}_${{ steps.version.outputs.VERSION }}
+          name: ${{ steps.date.outputs.DATE }}${{ inputs.release_tag_suffix }}_${{ steps.version.outputs.VERSION }}
           bodyFile: out/release-body.md
           artifacts: out/${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}.zip

@@ -19,7 +19,7 @@ jobs:
       artifact_suffix: hyprland-fedora-stable-rpms
       version_manifest: /root/versions/stable.env
       manifest_summary_path: versions/stable.env
-      release_tag_prefix: stable_
+      release_tag_suffix: _stable
       make_latest: false
       release_intro: 'Stable RPM build for Fedora using pinned refs from versions/stable.env:'
       include_manifest_summary: true
