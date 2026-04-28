@@ -92,6 +92,7 @@ DESTDIR=/out/packages/hyprtoolkit cmake --install build
 # Build Hyprland
 git clone --recursive https://github.com/hyprwm/Hyprland.git /src/hyprland
 cd /src/hyprland
+sed -i 's/lua55/lua/g' CMakeLists.txt
 # git fetch --tags && git checkout ${HYPRLAND_VERSION}
 git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DNO_TESTS=TRUE -DBUILD_TESTING=FALSE
