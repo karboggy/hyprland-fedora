@@ -6,9 +6,11 @@ BUILD_FLAVOR="${1:-}"
 case "$BUILD_FLAVOR" in
   nightly)
     ASSET_SUFFIX="_hyprland-fedora-nightly-rpms.zip"
+    RELEASE_TAG_PREFIX="nightly_"
     ;;
   stable)
     ASSET_SUFFIX="_hyprland-fedora-stable-rpms.zip"
+    RELEASE_TAG_PREFIX="stable_"
     ;;
   -h|--help)
     echo "Usage: $0 [nightly|stable]"
@@ -39,8 +41,8 @@ TARGET_DOWNLOAD_DIRECTORY="/tmp/hyprland-fedora-${BUILD_FLAVOR}-rpms"
 
 # Download latest zip version for the selected flavor
 URL_LATEST_ZIP=$(curl -fsSL 'https://api.github.com/repos/karboggy/hyprland-fedora/releases?per_page=100' \
-    | jq -r --arg suffix "$ASSET_SUFFIX" \
-        '[.[].assets[] | select(.name | endswith($suffix)) | .browser_download_url][0] // empty')
+    | jq -r --arg suffix "$ASSET_SUFFIX" --arg tag_prefix "$RELEASE_TAG_PREFIX" \
+        '[.[] | select(.tag_name | startswith($tag_prefix)) | .assets[] | select(.name | endswith($suffix)) | .browser_download_url][0] // empty')
 
 if [[ -z "$URL_LATEST_ZIP" || "$URL_LATEST_ZIP" == "null" ]]; then
   echo "ERROR: ${BUILD_FLAVOR} zip file not found in releases!" >&2

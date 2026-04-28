@@ -19,5 +19,6 @@ jobs:
       force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
       docker_image: hyprland-fedora43
       artifact_suffix: hyprland-fedora-nightly-rpms
+      release_tag_prefix: nightly_
       make_latest: true
       release_intro: 'Automatically built by GitHub Actions for Fedora:'
