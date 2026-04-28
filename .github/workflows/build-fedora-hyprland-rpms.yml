@@ -83,6 +83,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create GitHub release
+        if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
           makeLatest: true
