@@ -27,6 +27,7 @@ RUN dnf -y update && \
         hwdata-devel \
         iniparser-devel \
         jemalloc-devel \
+        lua-devel \
         libX11-devel \
         libXcursor-devel \
         libdisplay-info-devel \
