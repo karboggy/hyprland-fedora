@@ -26,7 +26,7 @@ jobs:
       )
     runs-on: ubuntu-latest
     env:
-      KEEP_NIGHTLY_RELEASES: 9
+      KEEP_NIGHTLY: 9
 
     steps:
       - name: Delete old nightly releases and tags
@@ -36,24 +36,57 @@ jobs:
         run: |
           set -euo pipefail
 
-          mapfile -t old_tags < <(
+          mapfile -t old_release_tags < <(
             gh release list \
               --repo "$REPO" \
               --limit 1000 \
-              --json tagName,createdAt \
-              --jq "[.[] | select(.tagName | contains(\"_nightly_\"))]
-                    | sort_by(.createdAt)
+              --json tagName \
+              --jq "def is_nightly_tag:
+                      (
+                        contains(\"_nightly_\") or
+                        test(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}_hyprland-\")
+                      ) and
+                      (contains(\"_stable_\") | not) and
+                      (startswith(\"stable_\") | not);
+                    [.[] | select(.tagName | is_nightly_tag)]
+                    | sort_by(.tagName)
                     | reverse
-                    | .[$KEEP_NIGHTLY_RELEASES:]
+                    | .[$KEEP_NIGHTLY:]
                     | .[].tagName"
           )
 
-          if [[ ${#old_tags[@]} -eq 0 ]]; then
+          if [[ ${#old_release_tags[@]} -eq 0 ]]; then
             echo "No old nightly releases to delete."
-            exit 0
+          else
+            for tag in "${old_release_tags[@]}"; do
+              echo "Deleting old nightly release and tag: $tag"
+              gh release delete "$tag" --repo "$REPO" --yes --cleanup-tag
+            done
           fi
 
-          for tag in "${old_tags[@]}"; do
-            echo "Deleting old nightly release and tag: $tag"
-            gh release delete "$tag" --repo "$REPO" --yes --cleanup-tag
-          done
+          mapfile -t old_tags < <(
+            gh api \
+              --paginate \
+              "repos/$REPO/git/matching-refs/tags" \
+              --jq "def is_nightly_tag:
+                      (
+                        contains(\"_nightly_\") or
+                        test(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}_hyprland-\")
+                      ) and
+                      (contains(\"_stable_\") | not) and
+                      (startswith(\"stable_\") | not);
+                    [.[] | .ref | ltrimstr(\"refs/tags/\") | select(is_nightly_tag)]
+                    | sort
+                    | reverse
+                    | .[$KEEP_NIGHTLY:]
+                    | .[]"
+          )
+
+          if [[ ${#old_tags[@]} -eq 0 ]]; then
+            echo "No old nightly tags to delete."
+          else
+            for tag in "${old_tags[@]}"; do
+              echo "Deleting old nightly tag: $tag"
+              gh api --method DELETE "repos/$REPO/git/refs/tags/$tag"
+            done
+          fi
