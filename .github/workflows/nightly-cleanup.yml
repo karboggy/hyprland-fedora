@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   cleanup:
-    name: Keep last 9 nightly releases per Fedora version
+    name: Keep latest nightly release per Fedora version
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
@@ -26,7 +26,7 @@ jobs:
       )
     runs-on: ubuntu-latest
     env:
-      KEEP_NIGHTLY: 9
+      KEEP_NIGHTLY: 1
 
     steps:
       - name: Delete old nightly releases and tags
