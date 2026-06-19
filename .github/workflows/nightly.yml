@@ -12,13 +12,20 @@ on:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora_version:
+          - 43
+          - 44
     permissions:
       contents: write
     uses: ./.github/workflows/generic-workflow.yml
     with:
       force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
-      docker_image: hyprland-fedora43
-      artifact_suffix: hyprland-fedora-nightly-rpms
-      release_tag_suffix: _nightly
-      make_latest: true
-      release_intro: 'Automatically built by GitHub Actions for Fedora:'
+      docker_image: hyprland-fedora${{ matrix.fedora_version }}
+      dockerfile: docker/fedora${{ matrix.fedora_version }}/Dockerfile
+      artifact_suffix: hyprland-fedora${{ matrix.fedora_version }}-nightly-rpms
+      release_tag_suffix: _fedora${{ matrix.fedora_version }}_nightly
+      make_latest: ${{ matrix.fedora_version == 44 }}
+      release_intro: 'Automatically built by GitHub Actions for Fedora ${{ matrix.fedora_version }}:'

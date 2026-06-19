@@ -5,18 +5,19 @@ For regular Fedora users, I recommend to use COPR, for example:
 - https://github.com/solopasha/hyprlandRPM
 - https://github.com/LionHeartP/hyprlandRPM
 
+Supported Fedora versions: 43 and 44.
 
 # How to install the latest stable?
-Run `./update-latest.sh stable` 
+Run `./update-latest.sh stable 44`
 
 # How to install the latest nightly?
-Run `./update-latest.sh nightly` 
+Run `./update-latest.sh nightly 44`
 
 # How to install a specific gereated package?
 Download the zip file from [the latest generated RPM packages](https://github.com/karboggy/hyprland-fedora/releases/latest) (Asset section).
 ```shell
 # Unzip it
-unzip -d hyprland-fedora-rpms 2025-12-29_hyprland-fedora-nightly-rpms.zip
+unzip -d hyprland-fedora-rpms 2025-12-29_hyprland-fedora44-nightly-rpms.zip
 
 # Install/Update RPM packages
 sudo dnf install hyprland-fedora-rpms/*.rpm
@@ -24,15 +25,18 @@ sudo dnf install hyprland-fedora-rpms/*.rpm
 
 # How to build myself the RPM packages?
 Requirements: `docker`
+
+Use `43` or `44` as the Fedora version argument.
+
 ```shell
 # Clone this repository
 git clone https://github.com/karboggy/hyprland-fedora.git
 
-# Generate nightly RPM packages
-cd hyprland-fedora && ./build-locally.sh nightly
+# Generate Fedora 44 nightly RPM packages
+cd hyprland-fedora && ./build-locally.sh nightly 44
 
-# Generate stable RPM packages from versions/stable.env
-./build-locally.sh stable
+# Generate Fedora 44 stable RPM packages from versions/stable.env
+./build-locally.sh stable 44
 
 # Install/Update RPM packages
 sudo dnf install out/rpms/x86_64/*.rpm
@@ -57,7 +61,7 @@ dnf provides "*/libpci*"
 ```
 
 # List of packages
-**Fedora 43** (x86_64):
+**Fedora 43 / Fedora 44** (x86_64):
  - aquamarine
  - hyprcursor
  - hyprgraphics
@@ -84,9 +88,11 @@ dnf provides "*/libpci*"
  - xdg-desktop-portal-hyprland
 
 # Roadmap
+ - [x] linux: Support fedora 43
+ - [x] linux: Support fedora 44
  - [x] misc: Script to locally build packages
  - [x] ci: Github CI pipeline to build nightly
  - [x] misc: Script to update from latest build done by Github
- - [ ] quickshell: enable cpptrace feature (-DVENDOR_CPPTRACE=ON)
  - [x] ci: Add Github CI pipeline to build latest release of each project (kind of)
+ - [ ] quickshell: enable cpptrace feature (-DVENDOR_CPPTRACE=ON)
  - [ ] ci: Allow dnf install from this Githuv repository (or COPR ?)

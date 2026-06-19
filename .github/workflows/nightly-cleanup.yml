@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   cleanup:
-    name: Keep last 9 nightly releases
+    name: Keep last 9 nightly releases per Fedora version
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
@@ -36,57 +36,62 @@ jobs:
         run: |
           set -euo pipefail
 
-          mapfile -t old_release_tags < <(
-            gh release list \
-              --repo "$REPO" \
-              --limit 1000 \
-              --json tagName \
-              --jq "def is_nightly_tag:
-                      (
-                        contains(\"_nightly_\") or
-                        test(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}_hyprland-\")
-                      ) and
-                      (contains(\"_stable_\") | not) and
-                      (startswith(\"stable_\") | not);
-                    [.[] | select(.tagName | is_nightly_tag)]
-                    | sort_by(.tagName)
-                    | reverse
-                    | .[$KEEP_NIGHTLY:]
-                    | .[].tagName"
-          )
+          cleanup_fedora() {
+            local fedora_version="$1"
+            local release_filter
+            local tag_filter
 
-          if [[ ${#old_release_tags[@]} -eq 0 ]]; then
-            echo "No old nightly releases to delete."
-          else
-            for tag in "${old_release_tags[@]}"; do
-              echo "Deleting old nightly release and tag: $tag"
-              gh release delete "$tag" --repo "$REPO" --yes --cleanup-tag
-            done
-          fi
+            release_filter="contains(\"_fedora${fedora_version}_nightly_\")"
+            tag_filter="$release_filter"
 
-          mapfile -t old_tags < <(
-            gh api \
-              --paginate \
-              "repos/$REPO/git/matching-refs/tags" \
-              --jq "def is_nightly_tag:
-                      (
-                        contains(\"_nightly_\") or
-                        test(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}_hyprland-\")
-                      ) and
-                      (contains(\"_stable_\") | not) and
-                      (startswith(\"stable_\") | not);
-                    [.[] | .ref | ltrimstr(\"refs/tags/\") | select(is_nightly_tag)]
-                    | sort
-                    | reverse
-                    | .[$KEEP_NIGHTLY:]
-                    | .[]"
-          )
+            if [[ "$fedora_version" == "43" ]]; then
+              release_filter="($release_filter or contains(\"_nightly_hyprland-\") or test(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}_hyprland-\"))"
+              tag_filter="$release_filter"
+            fi
 
-          if [[ ${#old_tags[@]} -eq 0 ]]; then
-            echo "No old nightly tags to delete."
-          else
-            for tag in "${old_tags[@]}"; do
-              echo "Deleting old nightly tag: $tag"
-              gh api --method DELETE "repos/$REPO/git/refs/tags/$tag"
-            done
-          fi
+            echo "Cleaning Fedora ${fedora_version} nightly releases, keeping ${KEEP_NIGHTLY}."
+
+            mapfile -t old_release_tags < <(
+              gh release list \
+                --repo "$REPO" \
+                --limit 1000 \
+                --json tagName \
+                --jq "[.[] | select(.tagName as \$tag | (\$tag | (${release_filter})) and ((\$tag | contains(\"_stable_\")) | not) and ((\$tag | startswith(\"stable_\")) | not))]
+                      | sort_by(.tagName)
+                      | reverse
+                      | .[$KEEP_NIGHTLY:]
+                      | .[].tagName"
+            )
+
+            if [[ ${#old_release_tags[@]} -eq 0 ]]; then
+              echo "No old Fedora ${fedora_version} nightly releases to delete."
+            else
+              for tag in "${old_release_tags[@]}"; do
+                echo "Deleting old Fedora ${fedora_version} nightly release and tag: $tag"
+                gh release delete "$tag" --repo "$REPO" --yes --cleanup-tag
+              done
+            fi
+
+            mapfile -t old_tags < <(
+              gh api \
+                --paginate \
+                "repos/$REPO/git/matching-refs/tags" \
+                --jq "[.[] | .ref | ltrimstr(\"refs/tags/\") | select(. as \$tag | (\$tag | (${tag_filter})) and ((\$tag | contains(\"_stable_\")) | not) and ((\$tag | startswith(\"stable_\")) | not))]
+                      | sort
+                      | reverse
+                      | .[$KEEP_NIGHTLY:]
+                      | .[]"
+            )
+
+            if [[ ${#old_tags[@]} -eq 0 ]]; then
+              echo "No old Fedora ${fedora_version} nightly tags to delete."
+            else
+              for tag in "${old_tags[@]}"; do
+                echo "Deleting old Fedora ${fedora_version} nightly tag: $tag"
+                gh api --method DELETE "repos/$REPO/git/refs/tags/$tag"
+              done
+            fi
+          }
+
+          cleanup_fedora 43
+          cleanup_fedora 44

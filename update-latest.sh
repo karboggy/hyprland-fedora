@@ -2,29 +2,56 @@
 set -euo pipefail
 
 BUILD_FLAVOR="${1:-}"
+FEDORA_VERSION="${2:-}"
+
+usage() {
+    echo "Usage: $0 [nightly|stable] [43|44]"
+}
 
 case "$BUILD_FLAVOR" in
   nightly)
-    ASSET_SUFFIX="_hyprland-fedora-nightly-rpms.zip"
-    RELEASE_TAG_SUFFIX="_nightly"
     ;;
   stable)
-    ASSET_SUFFIX="_hyprland-fedora-stable-rpms.zip"
-    RELEASE_TAG_SUFFIX="_stable"
     ;;
   -h|--help)
-    echo "Usage: $0 [nightly|stable]"
+    usage
     exit 0
     ;;
   "")
     echo "ERROR: missing build flavor" >&2
-    echo "Usage: $0 [nightly|stable]" >&2
+    usage >&2
     exit 1
     ;;
   *)
     echo "ERROR: unknown build flavor: $BUILD_FLAVOR" >&2
-    echo "Usage: $0 [nightly|stable]" >&2
+    usage >&2
     exit 1
+    ;;
+esac
+
+case "$FEDORA_VERSION" in
+  43|44)
+    ;;
+  "")
+    echo "ERROR: missing Fedora version" >&2
+    usage >&2
+    exit 1
+    ;;
+  *)
+    echo "ERROR: unsupported Fedora version: $FEDORA_VERSION" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
+
+case "$BUILD_FLAVOR" in
+  nightly)
+    ASSET_SUFFIX="_hyprland-fedora${FEDORA_VERSION}-nightly-rpms.zip"
+    RELEASE_TAG_SUFFIX="_fedora${FEDORA_VERSION}_nightly"
+    ;;
+  stable)
+    ASSET_SUFFIX="_hyprland-fedora${FEDORA_VERSION}-stable-rpms.zip"
+    RELEASE_TAG_SUFFIX="_fedora${FEDORA_VERSION}_stable"
     ;;
 esac
 
@@ -36,8 +63,8 @@ for cmd in curl jq wget unzip sudo dnf; do
 done
 
 # Configuration
-TARGET_DOWNLOAD_ZIP="/tmp/hyprland-fedora-${BUILD_FLAVOR}-rpms.zip"
-TARGET_DOWNLOAD_DIRECTORY="/tmp/hyprland-fedora-${BUILD_FLAVOR}-rpms"
+TARGET_DOWNLOAD_ZIP="/tmp/hyprland-fedora${FEDORA_VERSION}-${BUILD_FLAVOR}-rpms.zip"
+TARGET_DOWNLOAD_DIRECTORY="/tmp/hyprland-fedora${FEDORA_VERSION}-${BUILD_FLAVOR}-rpms"
 
 # Download latest zip version for the selected flavor
 URL_LATEST_ZIP=$(curl -fsSL 'https://api.github.com/repos/karboggy/hyprland-fedora/releases?per_page=100' \

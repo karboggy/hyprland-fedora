@@ -10,6 +10,9 @@ on:
       docker_image:
         type: string
         required: true
+      dockerfile:
+        type: string
+        required: true
       artifact_suffix:
         type: string
         required: true
@@ -58,10 +61,11 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ inputs.dockerfile }}
           push: false
           tags: ${{ inputs.docker_image }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ inputs.docker_image }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.docker_image }}
           build-args: |
             FORCE_REBUILD=${{ inputs.force_rebuild }}
           load: true

@@ -10,16 +10,23 @@ on:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora_version:
+          - 43
+          - 44
     permissions:
       contents: write
     uses: ./.github/workflows/generic-workflow.yml
     with:
       force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
-      docker_image: hyprland-fedora43-stable
-      artifact_suffix: hyprland-fedora-stable-rpms
+      docker_image: hyprland-fedora${{ matrix.fedora_version }}-stable
+      dockerfile: docker/fedora${{ matrix.fedora_version }}/Dockerfile
+      artifact_suffix: hyprland-fedora${{ matrix.fedora_version }}-stable-rpms
       version_manifest: /root/versions/stable.env
       manifest_summary_path: versions/stable.env
-      release_tag_suffix: _stable
+      release_tag_suffix: _fedora${{ matrix.fedora_version }}_stable
       make_latest: false
-      release_intro: 'Stable RPM build for Fedora using pinned refs from versions/stable.env:'
+      release_intro: 'Stable RPM build for Fedora ${{ matrix.fedora_version }} using pinned refs from versions/stable.env:'
       include_manifest_summary: true
