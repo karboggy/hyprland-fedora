@@ -68,6 +68,7 @@ RUN dnf -y update && \
         qt6-qtshadertools-devel \
         qt6-qtwayland-devel \
         re2-devel \
+        readline-devel \
         sdbus-cpp \
         sdbus-cpp-devel \
         spirv-tools \
