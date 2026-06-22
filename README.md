@@ -26,17 +26,19 @@ sudo dnf install hyprland-fedora-rpms/*.rpm
 # How to build myself the RPM packages?
 Requirements: `docker`
 
-Use `43` or `44` as the Fedora version argument.
+Use `43` or `44` as the Fedora version argument. This must match the Fedora
+version where you will install the RPMs; Fedora 44 RPMs will not install on
+Fedora 43.
 
 ```shell
 # Clone this repository
 git clone https://github.com/karboggy/hyprland-fedora.git
 
-# Generate Fedora 44 nightly RPM packages
-cd hyprland-fedora && ./build-locally.sh nightly 44
+# Generate nightly RPM packages for your Fedora version  (43 or 44)
+cd hyprland-fedora && ./build-locally.sh nightly 43
 
-# Generate Fedora 44 stable RPM packages from versions/stable.env
-./build-locally.sh stable 44
+# Generate stable RPM packages from versions/stable.env for your Fedora version (43 or 44)
+./build-locally.sh stable 43
 
 # Install/Update RPM packages
 sudo dnf install out/rpms/x86_64/*.rpm
@@ -75,6 +77,7 @@ dnf provides "*/libpci*"
  - hyprpaper
  - hyprpicker
  - hyprpolkitagent
+ - hyprland-qt-support
  - hyprqt6engine
  - hyprshot
  - hyprsunset

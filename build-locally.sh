@@ -48,6 +48,15 @@ case "$FEDORA_VERSION" in
         ;;
 esac
 
+if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    source /etc/os-release
+    if [[ "${ID:-}" == "fedora" && "${VERSION_ID:-}" != "$FEDORA_VERSION" ]]; then
+        echo "WARNING: building Fedora ${FEDORA_VERSION} RPMs on Fedora ${VERSION_ID}."
+        echo "         Install these RPMs only on Fedora ${FEDORA_VERSION}, or rebuild with: $0 ${BUILD_FLAVOR} ${VERSION_ID}"
+    fi
+fi
+
 DOCKER_IMAGE="hyprland-fedora${FEDORA_VERSION}"
 DOCKERFILE="docker/fedora${FEDORA_VERSION}/Dockerfile"
 
@@ -56,7 +65,8 @@ if [[ "$BUILD_FLAVOR" == "stable" ]]; then
 fi
 
 # Create out directory on the host
-rm -rf ./out && mkdir -p ./out
+rm -rf ./out
+mkdir -p ./out
 
 # Build Fedora with all required packages to compile all hyprland
 docker build -f "$DOCKERFILE" -t "$DOCKER_IMAGE:latest" .

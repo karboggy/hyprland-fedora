@@ -24,6 +24,22 @@ checkout_ref() {
     fi
 }
 
+qt6_qml_install_dir() {
+    local qtpaths qml_dir
+    for qtpaths in qtpaths6 qtpaths-qt6 /usr/lib64/qt6/bin/qtpaths /usr/lib/qt6/bin/qtpaths; do
+        if command -v "$qtpaths" >/dev/null 2>&1; then
+            if qml_dir="$("$qtpaths" --query QT_INSTALL_QML 2>/dev/null)" && [[ -n "$qml_dir" ]]; then
+                echo "$qml_dir"
+                return
+            fi
+        fi
+    done
+
+    echo "${INSTALL_PREFIX}/lib64/qt6/qml"
+}
+
+QT6_QML_INSTALL_DIR="$(qt6_qml_install_dir)"
+
 # Build glaze
 git clone https://github.com/stephenberry/glaze.git /src/glaze
 cd /src/glaze
@@ -189,6 +205,15 @@ cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprsunset cmake --install build
 
+# Build hyprland-qt-support
+git clone https://github.com/hyprwm/hyprland-qt-support.git /src/hyprland-qt-support
+cd /src/hyprland-qt-support
+checkout_ref HYPRLAND_QT_SUPPORT
+cmake -B build -S . ${CMAKE_COMMON_FLAGS} -DINSTALL_QMLDIR="${QT6_QML_INSTALL_DIR}"
+cmake --build build -j$(nproc)
+cmake --install build
+DESTDIR=/out/packages/hyprland-qt-support cmake --install build
+
 # Build hyprpolkitagent
 git clone https://github.com/hyprwm/hyprpolkitagent.git /src/hyprpolkitagent
 cd /src/hyprpolkitagent
@@ -233,15 +258,6 @@ cmake -B build -S . ${CMAKE_COMMON_FLAGS}
 cmake --build build -j$(nproc)
 cmake --install build
 DESTDIR=/out/packages/hyprland-guiutils cmake --install build
-
-# Build hyprland-qt-support
-git clone https://github.com/hyprwm/hyprland-qt-support.git /src/hyprland-qt-support
-cd /src/hyprland-qt-support
-checkout_ref HYPRLAND_QT_SUPPORT
-cmake -B build -S . ${CMAKE_COMMON_FLAGS}
-cmake --build build -j$(nproc)
-cmake --install build
-DESTDIR=/out/packages/hyprland-qt-support cmake --install build
 
 # Build hyprqt6engine
 git clone https://github.com/hyprwm/hyprqt6engine.git /src/hyprqt6engine

@@ -19,6 +19,15 @@ for pkgdir in /out/packages/*; do
 
     echo "Packaging $name-$version"
 
+    requires=()
+    case "$name" in
+        hyprpolkitagent)
+            requires+=("hyprland-qt-support")
+            ;;
+    esac
+
+    rpm_requires="$(for require in "${requires[@]}"; do echo "Requires:        ${require}"; done)"
+
     buildsrc="/tmp/${name}-${version}"
     rm -rf "$buildsrc"
     mkdir -p "$buildsrc"
@@ -42,6 +51,7 @@ Summary:        ${name} auto-built by karboggy
 License:        UNKNOWN
 URL:            ${url}
 BuildArch:      x86_64
+${rpm_requires}
 
 Source0:        %{name}-%{version}.tar.gz
 
