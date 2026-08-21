@@ -24,6 +24,8 @@ checkout_ref() {
     fi
 }
 
+REF_WAYLAND_PROTOCOLS="${REF_WAYLAND_PROTOCOLS:-1.49}"
+
 qt6_qml_install_dir() {
     local qtpaths qml_dir
     for qtpaths in qtpaths6 qtpaths-qt6 /usr/lib64/qt6/bin/qtpaths /usr/lib/qt6/bin/qtpaths; do
@@ -39,6 +41,13 @@ qt6_qml_install_dir() {
 }
 
 QT6_QML_INSTALL_DIR="$(qt6_qml_install_dir)"
+
+# Install newer wayland-protocols for builds that need a version newer than Fedora provides.
+git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git /src/wayland-protocols
+cd /src/wayland-protocols
+checkout_ref WAYLAND_PROTOCOLS
+meson setup build . --prefix=/usr
+meson install -C build
 
 # Build glaze
 git clone https://github.com/stephenberry/glaze.git /src/glaze

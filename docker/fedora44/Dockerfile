@@ -30,8 +30,10 @@ RUN dnf -y update && \
         lua-devel \
         libX11-devel \
         libXcursor-devel \
+        libcanberra-devel \
         libdisplay-info-devel \
         libdrm-devel \
+        libeis-devel \
         libinput-devel \
         libjpeg-turbo-devel \
         libpng-devel \
