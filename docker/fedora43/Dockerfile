@@ -104,6 +104,7 @@ RUN dnf -y update && \
 
 COPY scripts/ /root/
 COPY versions/ /root/versions/
+COPY patches/ /root/patches/
 RUN chmod +x /root/*.sh
 
 ENTRYPOINT ["/root/entrypoint.sh"]

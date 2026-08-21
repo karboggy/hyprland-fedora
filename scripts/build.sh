@@ -13,6 +13,22 @@ if [[ -n "$VERSION_MANIFEST" ]]; then
     source "$VERSION_MANIFEST"
 fi
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_PATCH_ROOT="${SCRIPT_DIR}/../patches"
+
+if [[ -d "${SCRIPT_DIR}/patches" ]]; then
+    DEFAULT_PATCH_ROOT="${SCRIPT_DIR}/patches"
+fi
+
+PATCH_ROOT="${PATCH_ROOT:-$DEFAULT_PATCH_ROOT}"
+FEDORA_VERSION_ID=""
+
+if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    source /etc/os-release
+    FEDORA_VERSION_ID="${VERSION_ID:-}"
+fi
+
 checkout_ref() {
     local key="$1"
     local ref_var="REF_${key}"
@@ -22,6 +38,33 @@ checkout_ref() {
         git fetch --tags --force
         git checkout --detach "$ref"
     fi
+}
+
+apply_component_patches() {
+    local component="$1"
+    local patch_scope patch_file patch_func
+    local patch_scopes=(common)
+
+    if [[ -n "$FEDORA_VERSION_ID" ]]; then
+        patch_scopes+=("fedora${FEDORA_VERSION_ID}")
+    fi
+
+    for patch_scope in "${patch_scopes[@]}"; do
+        patch_file="${PATCH_ROOT}/${patch_scope}/${component}.sh"
+        patch_func="apply_${patch_scope}_${component}_patches"
+
+        if [[ -f "$patch_file" ]]; then
+            # shellcheck disable=SC1090
+            source "$patch_file"
+
+            if ! declare -F "$patch_func" >/dev/null; then
+                echo "ERROR: patch file ${patch_file} must define ${patch_func}" >&2
+                exit 1
+            fi
+
+            "$patch_func"
+        fi
+    done
 }
 
 REF_WAYLAND_PROTOCOLS="${REF_WAYLAND_PROTOCOLS:-1.49}"
@@ -150,7 +193,7 @@ DESTDIR=/out/packages/hyprtoolkit cmake --install build
 git clone --recursive https://github.com/hyprwm/Hyprland.git /src/hyprland
 cd /src/hyprland
 checkout_ref HYPRLAND
-sed -i 's/lua55/lua/g' CMakeLists.txt
+apply_component_patches hyprland
 git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_COMMON_FLAGS} -DNO_TESTS=TRUE -DBUILD_TESTING=FALSE
 cmake --build build -j$(nproc)
