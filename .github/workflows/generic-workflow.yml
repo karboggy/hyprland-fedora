@@ -116,7 +116,7 @@ jobs:
       - name: Determine Hyprland version
         id: version
         run: |
-          HYPR_RPM=$(ls out/rpms/x86_64/*hyprland*.rpm | head -n1)
+          HYPR_RPM=$(ls out/rpms/x86_64/hyprland-[0-9]*.rpm | head -n1)
           VERSION=$(basename "$HYPR_RPM" .rpm | sed 's/\^/-/g')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
