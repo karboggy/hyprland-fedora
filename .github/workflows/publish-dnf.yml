@@ -1,0 +1,63 @@
+name: Publish DNF repository
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Stable, Nightly]
+    types: [completed]
+
+# Serialize metadata deployment and cleanup across both build flavors.
+concurrency:
+  group: publish-dnf
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.conclusion == 'success'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      protected_tags: ${{ steps.metadata.outputs.protected_tags }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Install repository tools
+        run: sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+      - name: Generate and verify repository metadata
+        id: metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGES_URL: ${{ steps.pages.outputs.base_url }}
+        run: python3 scripts/publish-dnf.py
+      - name: Upload Pages metadata
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out/pages
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  cleanup:
+    needs: publish
+    permissions:
+      contents: write
+    uses: ./.github/workflows/nightly-cleanup.yml
+    with:
+      protected_tags: ${{ needs.publish.outputs.protected_tags }}

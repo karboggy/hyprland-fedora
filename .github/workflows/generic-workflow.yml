@@ -40,6 +40,12 @@ on:
         required: false
         default: false
 
+    secrets:
+      RPM_SIGNING_PRIVATE_KEY:
+        required: true
+      RPM_SIGNING_PASSPHRASE:
+        required: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -55,7 +61,7 @@ jobs:
           submodules: recursive
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
@@ -88,6 +94,15 @@ jobs:
           docker run "${docker_args[@]}" \
             -v ${{ github.workspace }}/${{ env.OUT_DIR }}:/out \
             ${{ inputs.docker_image }}:latest
+
+      - name: Install RPM signing tools
+        run: sudo apt-get update && sudo apt-get install -y rpm gnupg
+
+      - name: Sign and verify RPMs
+        env:
+          RPM_SIGNING_PRIVATE_KEY: ${{ secrets.RPM_SIGNING_PRIVATE_KEY }}
+          RPM_SIGNING_PASSPHRASE: ${{ secrets.RPM_SIGNING_PASSPHRASE }}
+        run: bash scripts/sign-rpms.sh
 
       - name: Collect RPM files
         id: collect_rpms
@@ -143,8 +158,13 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           makeLatest: ${{ inputs.make_latest }}
+          commit: ${{ github.sha }}
           skipIfReleaseExists: true
+          immutableCreate: true
+          allowUpdates: true
+          updateOnlyUnreleased: true
+          artifactErrorsFailBuild: true
           tag: ${{ steps.date.outputs.DATE }}${{ inputs.release_tag_suffix }}_${{ steps.version.outputs.VERSION }}
           name: ${{ steps.date.outputs.DATE }}${{ inputs.release_tag_suffix }}_${{ steps.version.outputs.VERSION }}
           bodyFile: out/release-body.md
-          artifacts: out/${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}.zip
+          artifacts: "out/${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}.zip,out/rpms/x86_64/*.rpm,out/dnf-ready.json"

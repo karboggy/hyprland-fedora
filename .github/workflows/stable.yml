@@ -18,6 +18,7 @@ jobs:
           - 44
     permissions:
       contents: write
+    secrets: inherit
     uses: ./.github/workflows/generic-workflow.yml
     with:
       force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
