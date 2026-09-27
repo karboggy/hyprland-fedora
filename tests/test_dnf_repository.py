@@ -6,8 +6,12 @@ import os
 from pathlib import Path
 import runpy
 import tempfile
+import sys
 import unittest
 from unittest.mock import patch
+
+sys.path.insert(0, str(Path('scripts').resolve()))
+from fedora_versions import TARGETS, matrix
 
 spec = importlib.util.spec_from_file_location('publish_dnf', 'scripts/publish-dnf.py')
 publisher = importlib.util.module_from_spec(spec)
@@ -79,6 +83,14 @@ class RepositoryTests(unittest.TestCase):
         self.assertIn('gpgcheck=1', repo)
         self.assertIn('metadata_expire=1h', repo)
 
+    def test_fedora45_metadata_is_published_when_available(self):
+        self.release['tag_name'] = self.release['tag_name'].replace('fedora44', 'fedora45')
+        self.build()
+        site = Path('out/pages')
+        self.assertTrue((site / 'nightly/fedora/45/x86_64/repodata').is_dir())
+        self.assertIn(self.release['tag_name'],
+                      json.loads((site / 'releases.json').read_text()))
+
     def test_corrupt_rpm_blocks_publication(self):
         self.manifest['packages'][self.rpm_name] = '0' * 64
         with self.assertRaisesRegex(ValueError, 'Checksum mismatch'):
@@ -109,7 +121,7 @@ class RepositoryTests(unittest.TestCase):
 
     def test_cleanup_preserves_two_per_fedora_stable_and_protected(self):
         releases = [self.make_release(f'2026-09-{n:02d}_fedora{f}_nightly_hyprland', n)
-                    for f in (43, 44) for n in (1, 2, 3)]
+                    for f in (43, 44, 45) for n in (1, 2, 3)]
         stable = self.make_release('2026-09-01_fedora44_stable_hyprland', 1)
         releases.append(stable)
         protected = releases[3]['tag_name']
@@ -117,8 +129,29 @@ class RepositoryTests(unittest.TestCase):
              patch('subprocess.check_output', return_value=json.dumps([releases])), \
              patch('subprocess.run') as delete:
             runpy.run_path(CLEANUP, run_name='__main__')
-        self.assertEqual(delete.call_count, 1)
-        self.assertEqual(delete.call_args.args[0][3], releases[0]['tag_name'])
+        self.assertEqual(delete.call_count, 2)
+        self.assertEqual({call.args[0][3] for call in delete.call_args_list},
+                         {releases[0]['tag_name'], releases[6]['tag_name']})
+
+
+class FedoraTargetTests(unittest.TestCase):
+    def test_all_targets_and_latest_release(self):
+        entries = matrix()['include']
+        self.assertEqual([entry['fedora_version'] for entry in entries], [43, 44, 45])
+        self.assertEqual([entry['fedora_version'] for entry in entries
+                          if entry['make_latest']], [44])
+        self.assertEqual(len(TARGETS), len({target['version'] for target in TARGETS}))
+        root = Path(__file__).resolve().parent.parent
+        for target in TARGETS:
+            dockerfile = root / 'docker' / f"fedora{target['version']}" / 'Dockerfile'
+            self.assertEqual(dockerfile.read_text().splitlines()[0],
+                             f"FROM fedora:{target['version']}")
+
+    def test_select_experimental_target_and_reject_unknown(self):
+        self.assertEqual(matrix('45')['include'],
+                         [{'fedora_version': 45, 'experimental': True, 'make_latest': False}])
+        with self.assertRaises(ValueError):
+            matrix('999')
 
 
 if __name__ == '__main__':

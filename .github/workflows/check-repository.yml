@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check shell syntax
-        run: bash -n scripts/sign-rpms.sh
+        run: bash -n build-locally.sh update-latest.sh scripts/sign-rpms.sh tests/smoke-signing.sh
       - name: Test repository publication and cleanup
         run: python3 -m unittest discover -s tests -v
       - name: Install signing and metadata tools

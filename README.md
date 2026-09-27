@@ -5,12 +5,12 @@ For regular Fedora users, I recommend to use COPR, for example:
 - https://github.com/solopasha/hyprlandRPM
 - https://github.com/LionHeartP/hyprlandRPM
 
-Supported Fedora versions: 43 and 44.
+Supported Fedora versions: 43 and 44. Fedora 45 builds are experimental.
 
 # Install or update using the DNF repository
 
 The DNF repository serves metadata from GitHub Pages and downloads signed RPMs
-from GitHub Releases. Fedora 43 and 44 have separate stable and nightly repositories.
+from GitHub Releases. Each configured Fedora version has separate stable and nightly repositories.
 The repository becomes available after the first successful signed build and Pages deployment.
 
 ## Configure the repository and choose a channel
@@ -116,12 +116,30 @@ package dependencies; repository publication alone does not guarantee every upgr
 1. In Settings → Pages, select **GitHub Actions** as the source.
 2. Add Actions secrets `RPM_SIGNING_PRIVATE_KEY` (armored private key) and
    `RPM_SIGNING_PASSPHRASE`; commit only `keys/rpm-signing-public.asc`.
-3. Run **Stable** and **Nightly** on `main` to initialize all four repositories.
+3. Run **Stable** and **Nightly** on `main` to initialize the repositories for all configured Fedora versions.
    If today's release tag already exists, the build preserves it; a new release
    tag (normally the next day's build) is needed to add the signed RPM assets.
 4. Check **Publish DNF repository** and the deployed `releases.json` to see which
    release backs each repository. The publication workflow can also be run manually
    to retry a failed deployment without rebuilding RPMs.
+
+Fedora targets are defined once in `versions/fedora.json`: the version number,
+whether build failures are tolerated while experimental, and which nightly target
+is marked as the latest GitHub release (currently Fedora 44). CI matrices, local
+scripts, metadata publication and cleanup use this file.
+
+Both build workflows accept an optional `fedora_version` input: `all` (default)
+or a configured version such as `45`. To test Fedora 45 alone, run **Stable** or
+**Nightly** manually with `fedora_version=45`. Scheduled nightly builds include
+all configured targets. Experimental Fedora 45 failures do not block publication
+of successful Fedora 43/44 builds; inspect the Fedora 45 job itself to assess its
+result. Fedora 45 repositories become available only after signed RPMs are built
+successfully, and session compatibility still needs testing on Fedora 45.
+
+Release descriptions contain a short build summary; RPM assets provide the package
+list. Stable refs remain in `versions/stable.env` rather than being duplicated in
+every release description. These descriptions apply to newly created releases;
+existing published releases are preserved.
 
 Builds sign and verify every RPM, then upload the ZIP, individual RPMs and a
 `dnf-ready.json` checksum manifest. Releases are created as drafts and published
@@ -167,9 +185,9 @@ sudo dnf install hyprland-fedora-rpms/*.rpm
 ```
 
 # How to build myself the RPM packages?
-Requirements: `docker`
+Requirements: `docker`, `python3`
 
-Use `43` or `44` as the Fedora version argument. This must match the Fedora
+Use `43`, `44` or `45` as the Fedora version argument. This must match the Fedora
 version where you will install the RPMs; Fedora 44 RPMs will not install on
 Fedora 43.
 
@@ -177,10 +195,10 @@ Fedora 43.
 # Clone this repository
 git clone https://github.com/karboggy/hyprland-fedora.git
 
-# Generate nightly RPM packages for your Fedora version  (43 or 44)
+# Generate nightly RPM packages for your Fedora version  (43, 44 or 45)
 cd hyprland-fedora && ./build-locally.sh nightly 43
 
-# Generate stable RPM packages from versions/stable.env for your Fedora version (43 or 44)
+# Generate stable RPM packages from versions/stable.env for your Fedora version (43, 44 or 45)
 ./build-locally.sh stable 43
 
 # Install/Update RPM packages
@@ -206,7 +224,7 @@ dnf provides "*/libpci*"
 ```
 
 # List of packages
-**Fedora 43 / Fedora 44** (x86_64):
+**Fedora 43 / Fedora 44 / Fedora 45 (experimental)** (x86_64):
  - aquamarine
  - hyprcursor
  - hyprgraphics

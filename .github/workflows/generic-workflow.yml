@@ -3,6 +3,10 @@ name: (generic workflow)
 on:
   workflow_call:
     inputs:
+      experimental:
+        type: boolean
+        required: false
+        default: false
       force_rebuild:
         type: string
         required: false
@@ -20,10 +24,6 @@ on:
         type: string
         required: false
         default: ''
-      manifest_summary_path:
-        type: string
-        required: false
-        default: ''
       release_tag_suffix:
         type: string
         required: false
@@ -35,10 +35,6 @@ on:
       release_intro:
         type: string
         required: true
-      include_manifest_summary:
-        type: boolean
-        required: false
-        default: false
 
     secrets:
       RPM_SIGNING_PRIVATE_KEY:
@@ -49,6 +45,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.experimental }}
     permissions:
       contents: write
     env:
@@ -104,20 +101,6 @@ jobs:
           RPM_SIGNING_PASSPHRASE: ${{ secrets.RPM_SIGNING_PASSPHRASE }}
         run: bash scripts/sign-rpms.sh
 
-      - name: Collect RPM files
-        id: collect_rpms
-        run: |
-          RPM_FILES=$(find out -type f -name "*.rpm" | sort)
-
-          RELEASE_DESC=""
-          for f in $RPM_FILES; do
-            RELEASE_DESC+="- $(basename "$f")"$'\n'
-          done
-
-          echo "RELEASE_DESC<<EOF" >> $GITHUB_OUTPUT
-          echo "$RELEASE_DESC" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Get build date
         id: date
         run: |
@@ -136,22 +119,9 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build release body
-        run: |
-          echo "${{ inputs.release_intro }}" > out/release-body.md
-          echo >> out/release-body.md
-
-          if [[ "${{ inputs.include_manifest_summary }}" == "true" ]]; then
-            sed -n '/^REF_/p' "${{ inputs.manifest_summary_path }}" >> out/release-body.md
-            echo >> out/release-body.md
-            echo "Generated RPMs:" >> out/release-body.md
-          fi
-
-          echo "${{ steps.collect_rpms.outputs.RELEASE_DESC }}" >> out/release-body.md
-
-          if [[ "${{ inputs.include_manifest_summary }}" != "true" ]]; then
-            echo >> out/release-body.md
-            echo "[View latest Hyprland commits](https://github.com/hyprwm/Hyprland/commits/main/)" >> out/release-body.md
-          fi
+        env:
+          RELEASE_INTRO: ${{ inputs.release_intro }}
+        run: printf '%s\n' "$RELEASE_INTRO" > out/release-body.md
 
       - name: Create GitHub release
         if: github.ref == 'refs/heads/main'

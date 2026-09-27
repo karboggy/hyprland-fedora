@@ -7,26 +7,44 @@ on:
         description: 'Force rebuild Docker image'
         required: false
         default: '0'
+      fedora_version:
+        description: 'Fedora version to build, or all (see versions/fedora.json)'
+        required: false
+        default: 'all'
   schedule:
     - cron: '0 20 * * *'
 
 jobs:
+  targets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: targets
+        env:
+          FEDORA_SELECTION: ${{ github.event.inputs.fedora_version || 'all' }}
+        run: |
+          matrix=$(python3 scripts/fedora_versions.py "$FEDORA_SELECTION")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: targets
     strategy:
       fail-fast: false
-      matrix:
-        fedora_version:
-          - 43
-          - 44
+      matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
     permissions:
       contents: write
     secrets: inherit
     uses: ./.github/workflows/generic-workflow.yml
     with:
+      experimental: ${{ matrix.experimental }}
       force_rebuild: ${{ github.event.inputs.force_rebuild || '0' }}
       docker_image: hyprland-fedora${{ matrix.fedora_version }}
       dockerfile: docker/fedora${{ matrix.fedora_version }}/Dockerfile
       artifact_suffix: hyprland-fedora${{ matrix.fedora_version }}-nightly-rpms
       release_tag_suffix: _fedora${{ matrix.fedora_version }}_nightly
-      make_latest: ${{ matrix.fedora_version == 44 }}
-      release_intro: 'Automatically built by GitHub Actions for Fedora ${{ matrix.fedora_version }}:'
+      make_latest: ${{ matrix.make_latest }}
+      release_intro: 'Automatically built by GitHub Actions for Fedora ${{ matrix.fedora_version }}.'

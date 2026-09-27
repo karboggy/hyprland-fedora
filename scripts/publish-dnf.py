@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+from fedora_versions import SUPPORTED_VERSIONS
 import tempfile
 from urllib.parse import quote
 import xml.etree.ElementTree as ET
@@ -40,7 +41,7 @@ def build():
         db.mkdir()
         run('rpmkeys', '--dbpath', str(db), '--import', 'keys/rpm-signing-public.asc')
         for channel in ('stable', 'nightly'):
-            for fedora in (43, 44):
+            for fedora in SUPPORTED_VERSIONS:
                 candidates = sorted(
                     [r for r in available if f'_fedora{fedora}_{channel}_' in r['tag_name']
                      and any(a['name'] == 'dnf-ready.json' for a in r['assets'])],

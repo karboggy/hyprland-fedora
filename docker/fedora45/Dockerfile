@@ -1,4 +1,4 @@
-FROM fedora:43
+FROM fedora:45
 
 ARG FORCE_REBUILD=0
 RUN echo "Force rebuild cache: $FORCE_REBUILD"

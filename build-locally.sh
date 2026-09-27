@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+FEDORA_TARGETS="${SCRIPT_DIR}/scripts/fedora_versions.py"
+
 BUILD_FLAVOR="${1:-}"
 FEDORA_VERSION="${2:-}"
 DOCKER_IMAGE=""
@@ -8,7 +11,7 @@ DOCKERFILE=""
 VERSION_MANIFEST=""
 
 usage() {
-    echo "Usage: $0 [nightly|stable] [43|44]"
+    echo "Usage: $0 [nightly|stable] [$(python3 "$FEDORA_TARGETS" --list)]"
 }
 
 case "$BUILD_FLAVOR" in
@@ -33,20 +36,16 @@ case "$BUILD_FLAVOR" in
         ;;
 esac
 
-case "$FEDORA_VERSION" in
-    43|44)
-        ;;
-    "")
-        echo "ERROR: missing Fedora version" >&2
-        usage >&2
-        exit 1
-        ;;
-    *)
-        echo "ERROR: unsupported Fedora version: $FEDORA_VERSION" >&2
-        usage >&2
-        exit 1
-        ;;
-esac
+if [[ -z "$FEDORA_VERSION" ]]; then
+    echo "ERROR: missing Fedora version" >&2
+    usage >&2
+    exit 1
+fi
+if ! python3 "$FEDORA_TARGETS" --check "$FEDORA_VERSION"; then
+    echo "ERROR: unsupported Fedora version: $FEDORA_VERSION" >&2
+    usage >&2
+    exit 1
+fi
 
 if [[ -r /etc/os-release ]]; then
     # shellcheck disable=SC1091

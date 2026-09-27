@@ -28,6 +28,7 @@ RUN dnf -y update && \
         iniparser-devel \
         jemalloc-devel \
         lua-devel \
+        lcms2-devel \
         libX11-devel \
         libXcursor-devel \
         libcanberra-devel \

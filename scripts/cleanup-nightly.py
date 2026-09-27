@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+from fedora_versions import SUPPORTED_VERSIONS
 
 def run(*args):
     return subprocess.check_output(args, text=True).strip()
@@ -14,7 +15,7 @@ if not protected:
     raise ValueError('Missing published release protection list')
 pages = json.loads(run('gh', 'api', '--paginate', '--slurp', f'repos/{repo}/releases?per_page=100'))
 releases = [r for page in pages for r in page if not r['draft'] and not r['prerelease']]
-for fedora in (43, 44):
+for fedora in SUPPORTED_VERSIONS:
     def matches(tag):
         if '_stable_' in tag or tag.startswith('stable_'):
             return False
