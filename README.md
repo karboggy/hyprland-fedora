@@ -7,31 +7,81 @@ For regular Fedora users, I recommend to use COPR, for example:
 
 Supported Fedora versions: 43 and 44.
 
-# Install using the DNF repository
+# Install or update using the DNF repository
 
 The DNF repository serves metadata from GitHub Pages and downloads signed RPMs
 from GitHub Releases. Fedora 43 and 44 have separate stable and nightly repositories.
 The repository becomes available after the first successful signed build and Pages deployment.
 
-Install the repository configuration once:
+## Configure the repository and choose a channel
+
+For both a fresh installation and an existing ZIP-based installation, install
+the repository configuration once:
 
 ```shell
 sudo curl --fail --location \
   https://karboggy.github.io/hyprland-fedora/hyprland-fedora.repo \
   --output /etc/yum.repos.d/hyprland-fedora.repo
+```
+
+Choose your channel before installing or synchronizing packages. Stable is enabled
+by default in the repository file; nightly is disabled. These DNF5 commands also
+override any previous channel selection. Enable only one channel.
+
+For stable:
+
+```shell
+sudo dnf config-manager setopt hyprland-fedora-nightly.enabled=0 hyprland-fedora-stable.enabled=1
+```
+
+For nightly:
+
+```shell
+sudo dnf config-manager setopt hyprland-fedora-stable.enabled=0 hyprland-fedora-nightly.enabled=1
+```
+
+## Fresh installation
+
+After configuring the repository and choosing a channel:
+
+```shell
 sudo dnf makecache --refresh
 sudo dnf install hyprland
 ```
 
-Stable is enabled by default; nightly is disabled. Enable only one channel.
-To use nightly persistently on Fedora 43/44 (DNF5):
+Install any additional tools you want, such as `hyprlock`, `hypridle` or `quickshell`.
+Installing `hyprland` installs its dependencies, not every package in this repository.
+
+## Switch existing ZIP-installed packages to the DNF repository
+
+Keep your installed RPMs: no uninstallation is needed. After configuring the
+repository and choosing a channel, preview synchronization on your current Fedora
+version:
 
 ```shell
-sudo dnf config-manager setopt hyprland-fedora-stable.enabled=0 hyprland-fedora-nightly.enabled=1
-sudo dnf distro-sync --refresh
+sudo dnf --refresh --assumeno distro-sync
 ```
 
-Review the proposed transaction before accepting it, especially when changing channels.
+`--assumeno` automatically declines the transaction; the final "Operation aborted"
+message is expected and no packages are changed. Check that your Hyprland packages
+come from `hyprland-fedora-stable` or `hyprland-fedora-nightly` and review any removals.
+
+If the proposed transaction is suitable, run it without `--assumeno`:
+
+```shell
+sudo dnf --refresh distro-sync
+```
+
+`distro-sync` can upgrade, downgrade or reinstall packages to match the selected
+repositories. Without package names, it synchronizes the whole system, including
+Fedora updates. Some ZIP-installed RPMs may be reinstalled at the same version
+from our signed repository. This is also the procedure for switching channels.
+
+Restart your session (or reboot after system updates) and verify that Hyprland
+works before starting a Fedora version upgrade.
+
+## Signing key verification
+
 DNF imports the public signing key when first installing signed packages. Verify
 its fingerprint against `keys/rpm-signing-public.asc`:
 
@@ -39,8 +89,15 @@ its fingerprint against `keys/rpm-signing-public.asc`:
 3A41 F19C DA42 B4AB F1F4 5249 A1C9 9FD4 7A51 1582
 ```
 
-Once configured, normal `dnf upgrade` commands include these packages. For a
-Fedora 43 to 44 migration, ensure that the selected channel has a complete Fedora
+## Subsequent updates and Fedora version upgrades
+
+Once configured, normal updates include these packages:
+
+```shell
+sudo dnf upgrade --refresh
+```
+
+For a Fedora 43 to 44 migration, ensure that the selected channel has a complete Fedora
 44 repository before preparing the offline upgrade:
 
 ```shell
