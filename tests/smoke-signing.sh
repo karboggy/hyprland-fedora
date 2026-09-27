@@ -33,6 +33,7 @@ SPEC
 rpmbuild --define "_topdir $work/rpmbuild" -bb rpmbuild/SPECS/hyprland.spec
 cp rpmbuild/RPMS/x86_64/*.rpm out/rpms/x86_64/
 bash "$script_root/scripts/sign-rpms.sh"
+mkdir -p metadata
 createrepo_c --general-compress-type gz \
     --baseurl https://github.com/example/test/releases/download/test/ \
     --outputdir metadata out/rpms/x86_64
