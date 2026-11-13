@@ -13,6 +13,7 @@ ENV PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkg
 # Install dependencies
 RUN dnf -y update && \
     dnf -y install \
+        abseil-cpp-devel \
         cairo-devel \
         cli11-devel \
         cmake \

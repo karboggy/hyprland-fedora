@@ -1,6 +1,10 @@
 name: Stable
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'versions/stable.env'
   workflow_dispatch:
     inputs:
       force_rebuild:

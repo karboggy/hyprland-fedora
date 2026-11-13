@@ -89,7 +89,9 @@ QT6_QML_INSTALL_DIR="$(qt6_qml_install_dir)"
 git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git /src/wayland-protocols
 cd /src/wayland-protocols
 checkout_ref WAYLAND_PROTOCOLS
-meson setup build . --prefix=/usr
+# Only install protocol XML/pkg-config data. The 1.50 test suite requires
+# wayland-scanner >=1.25, newer than Fedora 44's Wayland 1.24.
+meson setup build . --prefix=/usr -Dtests=false
 meson install -C build
 
 # Build glaze
