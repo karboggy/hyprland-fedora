@@ -98,7 +98,7 @@ def build():
     repo = []
     for channel in ('stable', 'nightly'):
         repo.append(f'''[hyprland-fedora-{channel}]
-name=Hyprland Fedora {channel}
+name=Hyprland Fedora {channel} ({os.environ['GITHUB_REPOSITORY']})
 baseurl={base}/{channel}/fedora/$releasever/$basearch/
 enabled={int(channel == 'stable')}
 gpgcheck=1
