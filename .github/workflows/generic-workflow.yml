@@ -123,6 +123,19 @@ jobs:
           RELEASE_INTRO: ${{ inputs.release_intro }}
         run: printf '%s\n' "$RELEASE_INTRO" > out/release-body.md
 
+      - name: Save signed release assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}_${{ github.run_attempt }}
+          retention-days: 3
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            out/${{ steps.date.outputs.DATE }}_${{ inputs.artifact_suffix }}.zip
+            out/rpms/x86_64/*.rpm
+            out/dnf-ready.json
+            out/release-body.md
+
       - name: Create GitHub release
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1

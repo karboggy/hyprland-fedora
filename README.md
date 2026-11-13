@@ -147,6 +147,13 @@ only after all assets upload successfully. Older ZIP-only releases are not selec
 for the DNF repository. A channel with no signed release yet is omitted until its
 first signed build; an entirely empty deployment is rejected.
 
+Before creating the release, builds also save the signed RPMs, ZIP, checksum
+manifest and release body as an Actions artifact retained for seven days. If release
+publication fails, download that artifact to recover the assets without rebuilding.
+Publish the ZIP, individual RPMs and `dnf-ready.json` together, targeting the original
+build commit. Run **Publish DNF repository** manually after recovering a failed build's
+release, since a failed build does not trigger automatic repository publication.
+
 The Pages workflow serializes publications, verifies RPM checksums and signatures,
 then deploys metadata for every available Fedora/channel combination. It publishes
 no RPM binaries to Pages. Metadata generation or deployment failures prevent cleanup.
