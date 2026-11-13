@@ -32,12 +32,12 @@ jobs:
     outputs:
       protected_tags: ${{ steps.metadata.outputs.protected_tags }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
       - name: Configure Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Install repository tools
         run: sudo apt-get update && sudo apt-get install -y createrepo-c rpm
       - name: Generate and verify repository metadata
@@ -47,12 +47,12 @@ jobs:
           PAGES_URL: ${{ steps.pages.outputs.base_url }}
         run: python3 scripts/publish-dnf.py
       - name: Upload Pages metadata
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: out/pages
       - name: Deploy Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   cleanup:
     needs: publish
